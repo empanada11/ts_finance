@@ -19,7 +19,7 @@ Mögliche Arten die Arbeit "origineller machen"
 ## Overview
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 ```
 
 ```{r packages, include = FALSE}
@@ -56,10 +56,6 @@ summary(META)
 ```
 
 ```{r}
-plot(META)
-```
-
-```{r}
 lineChart(META,theme = chartTheme("black"))
 
 ```
@@ -71,7 +67,7 @@ addSMA(n=21,col="darkred")
 legend("bottomright",col=c("darkblue","darkred"),lty=1,legend = c("SMA(5)","SMA(21)"),cex=0.6)
 ```
 
-## Descriptive Statistics
+## Identification Phase
 
 This chapter will be providing a short descriptive analysis of the tech companies stock prices since their launch.
 
@@ -79,7 +75,9 @@ This chapter will be providing a short descriptive analysis of the tech companie
 plot(META, main="META")
 ```
 
-## Arima
+## Estimation Phase
+
+### ARIMA
 
 The ARIMA model combines the following methods:
 
@@ -117,7 +115,7 @@ colnames(arima_aic) <- c(0:max.order) # Order of MA(q) in columns
 # Calculating and storing the AICs for different model specifications
 for(i in 0:max.order){
   for(j in 0:max.order){
-    arima_aic[i+1,j+1]<-Arima(y=log(SMI), order=c(i,d,j), include.constant =  TRUE)$aic
+    arima_aic[i+1,j+1]<-Arima(y=log(META), order=c(i,d,j), include.constant =  TRUE)$aic
   }
 }
 arima_aic
@@ -132,16 +130,79 @@ ma <- as.numeric(colnames(arima_aic)[index[2]])
 
 ```{r Estimating the optimal ARIMA-model and testing for significance of the coefficients}
 
-arima <- Arima(y=log(SMI), order=c(ar,1,ma), include.constant = TRUE)
+arima <- Arima(y=log(META), order=c(ar,1,ma), include.constant = TRUE)
 coeftest(arima)
 ```
 
 ```{r Estimating the orders of the ARIMA(p,d,q) automatically}
-arima <- auto.arima(log(SMI), ic="aic")
+arima <- auto.arima(log(META), ic="aic")
 arima
 ```
 
 ```{r, include = FALSE, warning=FALSE}
 pred <- forecast(arima,level=0.95,h=20)
 plot(pred, ylab="META") + grid()
+```
+
+This model does not satisfy and another possible model should be pursued. GARCH could provide better results.
+
+### GARCH
+
+```{r Calculate continuous returns ("stetige Renditen") and test for stationarity}
+
+Returns<-na.omit(diff(log(BTC)))
+colnames(Returns)<-"BTC Returns"
+plot(Returns)
+adf.test(Returns)
+```
+
+```{r Compute the rolling 1 month estimate of annualized volatility}
+chart.RollingPerformance(R = Returns, width = 30,
+                         FUN = "sd.annualized", scale = 252, main = "One month rolling volatility")
+```
+
+```{r  Determine the ARMA lag orders}
+auto.arima(Returns)
+```
+
+```{r Specify a standard GARCH model}
+
+garchspec <- ugarchspec(mean.model = list(armaOrder = c(1,1)),
+                        variance.model = list(garchOrder = c(1,1), model = "sGARCH"))
+```
+
+```{r}
+# Estimate the model
+garchfit <- ugarchfit(data = Returns, spec = garchspec)
+
+# Use the method sigma to retrieve the estimated volatilities 
+garchvol <- sigma(garchfit)
+
+# Plot the GARCH and realized volatility
+par(mfrow=c(2,1)) 
+plot(garchvol, main="GARCH volatility")
+plot(abs(Returns), main="Realized volatility")
+```
+
+```{r Forecast returns and volatility}
+
+garchforecast <- ugarchforecast(fitORspec = garchfit, n.ahead = 5)
+plot(garchforecast, which=1)
+plot(garchforecast, which=3)
+```
+
+## Excursion: Dot.Com Bubble Now vs. then
+
+```{r}
+data <- NULL
+tickers_index <- c("^IXIC") # Ticker from Yahoo Finance for the SMI
+
+for (Ticker in tickers_index){
+  data <- cbind(data,
+                getSymbols.yahoo(Ticker, from="1990-01-01", periodicity = "monthly", auto.assign=FALSE)[,6])
+}
+
+nasdaq <- data
+colnames(nasdaq) <- c("nasdaq")
+plot(nasdaq)
 ```
