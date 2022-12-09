@@ -141,7 +141,7 @@ arima <- auto.arima(log(SMI), ic="aic")
 arima
 ```
 
-```{r}
+```{r, include = FALSE, warning=FALSE}
 pred <- forecast(arima,level=0.95,h=20)
 plot(pred, ylab="META") + grid()
 ```
