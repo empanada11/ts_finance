@@ -3,6 +3,7 @@ title: "Finance"
 author: "Milica Pajkic, Stefanie Palten"
 date: "2022-12-02"
 output: html_document
+collapse: true
 ---
 
 ## Introduction
@@ -23,12 +24,29 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r packages, include = FALSE}
 library(quantmod)
+library(ggplot2)
+library(forecast)
+library(tseries)
+library(rugarch)
+library(prophet)
+library(tsfknn)
 library(TTR)
 library(PerformanceAnalytics)
 ```
 
 ```{r load META, include=FALSE}
-getSymbols("META",src="yahoo", from="2005-07-01",to="2022-12-05")
+data <- NULL
+tickers_index <- c("META") # Ticker from Yahoo Finance for the SMI
+
+for (Ticker in tickers_index){
+  data <- cbind(data,
+                getSymbols.yahoo(Ticker, from="2012-05-19", 
+                                 periodicity = "weekly", 
+                                 auto.assign=FALSE)[,6])
+}
+
+META <- data
+colnames(META) <- c("META")
 
 ```
 
@@ -53,3 +71,25 @@ legend("bottomright",col=c("darkblue","darkred"),lty=1,legend = c("SMA(5)","SMA(
 ```
 
 ## Descriptive Statistics
+
+This chapter will be providing a short descriptive analysis of the tech companies stock prices since their launch.
+
+```{r, collapse=TRUE}
+plot(META, main="META")
+```
+
+## Arima
+
+The ARIMA model combines the following methods:
+
+-   Auto regression
+
+-   differencing
+
+-   Moving average
+
+First step in the ARIMA process is determining if it is stationarity.
+
+```{r}
+
+```
