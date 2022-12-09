@@ -32,6 +32,7 @@ library(prophet)
 library(tsfknn)
 library(TTR)
 library(PerformanceAnalytics)
+library(lmtest)
 ```
 
 ```{r load META, include=FALSE}
@@ -74,7 +75,7 @@ legend("bottomright",col=c("darkblue","darkred"),lty=1,legend = c("SMA(5)","SMA(
 
 This chapter will be providing a short descriptive analysis of the tech companies stock prices since their launch.
 
-```{r, collapse=TRUE}
+```{r,collapsed=TRUE}
 plot(META, main="META")
 ```
 
@@ -91,5 +92,56 @@ The ARIMA model combines the following methods:
 First step in the ARIMA process is determining if it is stationarity.
 
 ```{r}
+adf.test(META)
+```
 
+It is not stationary therefore we have to do some modelling.
+
+```{r}
+META_returns <- na.omit(diff(log(META)))
+plot(META_returns, main="META Returns", ylab=NULL)
+adf.test(META_returns)
+```
+
+It is now stationary, because the adf-Test shows a value below 0.01
+
+```{r Identifying the orders p and q of the ARIMA(p,1,q)-model by testing different model specifications, include=FALSE}
+
+max.order <- 2 # We only allow a maximum of two AR- and/or MA-terms 
+d <- 1 
+# Defining the matrix in which the values of the AICs for different model specifications are stored
+arima_aic <- matrix(NA, ncol=max.order+1, nrow=max.order+1)
+row.names(arima_aic) <- c(0:max.order) # Order of AR(p) in rows
+colnames(arima_aic) <- c(0:max.order) # Order of MA(q) in columns
+
+# Calculating and storing the AICs for different model specifications
+for(i in 0:max.order){
+  for(j in 0:max.order){
+    arima_aic[i+1,j+1]<-Arima(y=log(SMI), order=c(i,d,j), include.constant =  TRUE)$aic
+  }
+}
+arima_aic
+```
+
+```{r Finding the model specification which minimizes the AIC}
+
+index <- which(arima_aic == min(arima_aic), arr.ind = TRUE)
+ar <- as.numeric(rownames(arima_aic)[index[1]])
+ma <- as.numeric(colnames(arima_aic)[index[2]])
+```
+
+```{r Estimating the optimal ARIMA-model and testing for significance of the coefficients}
+
+arima <- Arima(y=log(SMI), order=c(ar,1,ma), include.constant = TRUE)
+coeftest(arima)
+```
+
+```{r Estimating the orders of the ARIMA(p,d,q) automatically}
+arima <- auto.arima(log(SMI), ic="aic")
+arima
+```
+
+```{r}
+pred <- forecast(arima,level=0.95,h=20)
+plot(pred, ylab="META") + grid()
 ```
