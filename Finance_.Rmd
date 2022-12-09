@@ -5,6 +5,18 @@ date: "2022-12-02"
 output: html_document
 ---
 
+## Introduction
+
+Idee: Wir vergleichen die Aktienpreise von den Meta mit zwei weiteren. Ausgangslage ist der Rückgang des Aktienpreises von Meta in den letzten Monaten (*AMZN, META Layoffs*, o. J.).
+
+Mögliche Arten die Arbeit "origineller machen"
+
+-   Es wird oft ein Vergleich mit der Dot.Com Bubble gezogen zu der jetztigen Situation. Ist dieser Vergleich valide?
+
+-   Prophet Analyse Tool von Meta (<https://www.geeksforgeeks.org/time-series-analysis-using-facebook-prophet-in-r-programming/>)
+
+## Overview
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -39,3 +51,5 @@ addSMA(n=5,col="darkblue")
 addSMA(n=21,col="darkred")
 legend("bottomright",col=c("darkblue","darkred"),lty=1,legend = c("SMA(5)","SMA(21)"),cex=0.6)
 ```
+
+## Descriptive Statistics
