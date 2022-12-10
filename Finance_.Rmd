@@ -8,7 +8,7 @@ collapse: true
 
 ## Introduction
 
-Idee: Wir vergleichen die Aktienpreise von den Meta mit zwei weiteren. Ausgangslage ist der Rückgang des Aktienpreises von Meta in den letzten Monaten (*AMZN, META Layoffs*, o. J.).
+Idee: Wir vergleichen die Aktienpreise von den Meta mit zwei weiteren (Google und Apple). Ausgangslage ist der Rückgang des Aktienpreises von Meta in den letzten Monaten (*AMZN, META Layoffs*, o. J.).
 
 Mögliche Arten die Arbeit "origineller machen"
 
@@ -258,8 +258,8 @@ This model does not satisfy and another possible model should be pursued. GARCH 
 
 ```{r Calculate continuous returns ("stetige Renditen") and test for stationarity}
 
-Returns<-na.omit(diff(log(BTC)))
-colnames(Returns)<-"BTC Returns"
+Returns<-na.omit(diff(log(META)))
+colnames(Returns)<-"META Retourns"
 plot(Returns)
 adf.test(Returns)
 ```
