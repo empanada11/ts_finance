@@ -228,13 +228,13 @@ arima.goog <- Arima(y=log(goog), order=c(ar,1,ma), include.constant = TRUE)
 coeftest(arima.goog)
 ```
 
-```{r Estimating  optimal ARIMA + testing for significance of the coefficients Goog}
+```{r Estimating  optimal ARIMA + testing for significance of the coefficients apple}
 
 arima.apple <- Arima(y=log(apple), order=c(ar,1,ma), include.constant = TRUE)
 coeftest(arima.apple)
 ```
 
-```{r Estimating the orders of the ARIMA(p,d,q) automatically}
+```{r Estimating the orders of the ARIMA(p,d,q) automatically, warning=FALSE}
 arima <- auto.arima(log(META), ic="aic")
 pred <- forecast(arima,level=0.95,h=20)
 plot(pred, ylab="META") + grid()
@@ -246,7 +246,7 @@ pred.google <- forecast(arima.google1,level=0.95,h=20)
 plot(pred.google, ylab="Google") + grid()
 ```
 
-```{r Estimating the orders of the ARIMA(p,d,q) automatically, warning=FALSE}
+```{r Estimating the orders of the ARIMA(p,d,q) automatically apple, warning=FALSE}
 arima.apple.1 <- auto.arima(log(apply(array, margin, ...)), ic="aic")
 pred.apple <- forecast(arima.apple.1,level=0.95,h=20)
 plot(pred.apple, ylab="Apple") + grid()
