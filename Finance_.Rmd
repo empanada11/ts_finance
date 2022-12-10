@@ -67,12 +67,45 @@ addSMA(n=21,col="darkred")
 legend("bottomright",col=c("darkblue","darkred"),lty=1,legend = c("SMA(5)","SMA(21)"),cex=0.6)
 ```
 
+```{r get google data, include=FALSE}
+data.goog <- NULL
+tickers_index <- c("GOOG") # Ticker from Yahoo Finance for the SMI
+
+for (Ticker in tickers_index){
+  data.goog <- cbind(data.goog,
+                getSymbols.yahoo(Ticker, from="2004-08-20", 
+                                 periodicity = "weekly", 
+                                 auto.assign=FALSE)[,6])
+}
+
+goog <- data.goog
+colnames(goog) <- c("goog")
+```
+
+```{r get apple data, include=FALSE}
+data.apple <- NULL
+tickers_index <- c("AAPL") # Ticker from Yahoo Finance for the SMI
+
+for (Ticker in tickers_index){
+  data.apple <- cbind(data.apple,
+                getSymbols.yahoo(Ticker, from="1980-12-13", 
+                                 periodicity = "weekly", 
+                                 auto.assign=FALSE)[,6])
+}
+
+apple <- data.apple
+colnames(apple) <- c("apple")
+```
+
 ## Identification Phase
 
 This chapter will be providing a short descriptive analysis of the tech companies stock prices since their launch.
 
 ```{r,collapsed=TRUE}
+par(mfrow=c(3,1)) 
 plot(META, main="META")
+plot(goog, main="Google")
+plot(apple, main="Apple")
 ```
 
 ## Estimation Phase
@@ -91,14 +124,28 @@ First step in the ARIMA process is determining if it is stationarity.
 
 ```{r}
 adf.test(META)
+adf.test(goog)
+adf.test(apple)
 ```
 
 It is not stationary therefore we have to do some modelling.
 
-```{r}
+```{r Calculating log returns for META}
 META_returns <- na.omit(diff(log(META)))
 plot(META_returns, main="META Returns", ylab=NULL)
 adf.test(META_returns)
+```
+
+```{r Calculating log returns for google}
+google_returns <- na.omit(diff(log(goog)))
+plot(google_returns, main="Google Returns", ylab=NULL)
+adf.test(google_returns)
+```
+
+```{r Calculating log returns for APPLE}
+apple_returns <- na.omit(diff(log(apple)))
+plot(apple_returns, main="Apple Returns", ylab=NULL)
+adf.test(apple_returns)
 ```
 
 It is now stationary, because the adf-Test shows a value below 0.01
@@ -112,7 +159,6 @@ arima_aic <- matrix(NA, ncol=max.order+1, nrow=max.order+1)
 row.names(arima_aic) <- c(0:max.order) # Order of AR(p) in rows
 colnames(arima_aic) <- c(0:max.order) # Order of MA(q) in columns
 
-# Calculating and storing the AICs for different model specifications
 for(i in 0:max.order){
   for(j in 0:max.order){
     arima_aic[i+1,j+1]<-Arima(y=log(META), order=c(i,d,j), include.constant =  TRUE)$aic
@@ -121,27 +167,89 @@ for(i in 0:max.order){
 arima_aic
 ```
 
-```{r Finding the model specification which minimizes the AIC}
+```{r Calculating and storing the AICs for different model specifications}
+
+arima_aic.goog <- matrix(NA, ncol=max.order+1, nrow=max.order+1)
+row.names(arima_aic.goog) <- c(0:max.order) # Order of AR(p) in rows
+colnames(arima_aic.goog) <- c(0:max.order) # Order of MA(q) in columns
+
+for(i in 0:max.order){
+  for(j in 0:max.order){
+    arima_aic.goog[i+1,j+1]<-Arima(y=log(goog), order=c(i,d,j), include.constant =  TRUE)$aic
+  }
+}
+arima_aic.goog
+```
+
+```{r Calculating and storing the AICs for different model specifications Apple}
+
+arima_aic.apple <- matrix(NA, ncol=max.order+1, nrow=max.order+1)
+row.names(arima_aic.apple) <- c(0:max.order) # Order of AR(p) in rows
+colnames(arima_aic.apple) <- c(0:max.order) # Order of MA(q) in columns
+
+for(i in 0:max.order){
+  for(j in 0:max.order){
+    arima_aic.apple[i+1,j+1]<-Arima(y=log(apple), order=c(i,d,j), include.constant =  TRUE)$aic
+  }
+}
+arima_aic.apple
+```
+
+```{r Finding the model specification which minimizes the AIC META}
 
 index <- which(arima_aic == min(arima_aic), arr.ind = TRUE)
 ar <- as.numeric(rownames(arima_aic)[index[1]])
 ma <- as.numeric(colnames(arima_aic)[index[2]])
 ```
 
-```{r Estimating the optimal ARIMA-model and testing for significance of the coefficients}
+```{r Finding the model specification which minimizes the AIC Google}
+
+index.goog <- which(arima_aic.goog == min(arima_aic.goog), arr.ind = TRUE)
+ar.goog <- as.numeric(rownames(arima_aic.goog)[index[1]])
+ma.goog <- as.numeric(colnames(arima_aic.goog)[index[2]])
+```
+
+```{r Finding the model specification which minimizes the AIC Apple}
+
+index.apple <- which(arima_aic.apple == min(arima_aic.apple), arr.ind = TRUE)
+ar.apple <- as.numeric(rownames(arima_aic.apple)[index[1]])
+ma.apple <- as.numeric(colnames(arima_aic.apple)[index[2]])
+```
+
+```{r Estimating  optimal ARIMA + testing for significance of the coefficients META}
 
 arima <- Arima(y=log(META), order=c(ar,1,ma), include.constant = TRUE)
 coeftest(arima)
 ```
 
-```{r Estimating the orders of the ARIMA(p,d,q) automatically}
-arima <- auto.arima(log(META), ic="aic")
-arima
+```{r Estimating  optimal ARIMA + testing for significance of the coefficients Goog}
+
+arima.goog <- Arima(y=log(goog), order=c(ar,1,ma), include.constant = TRUE)
+coeftest(arima.goog)
 ```
 
-```{r, include = FALSE, warning=FALSE}
+```{r Estimating  optimal ARIMA + testing for significance of the coefficients Goog}
+
+arima.apple <- Arima(y=log(apple), order=c(ar,1,ma), include.constant = TRUE)
+coeftest(arima.apple)
+```
+
+```{r Estimating the orders of the ARIMA(p,d,q) automatically}
+arima <- auto.arima(log(META), ic="aic")
 pred <- forecast(arima,level=0.95,h=20)
 plot(pred, ylab="META") + grid()
+```
+
+```{r Estimating the orders of the ARIMA(p,d,q) automatically, warning=FALSE}
+arima.google1 <- auto.arima(log(goog), ic="aic")
+pred.google <- forecast(arima.google1,level=0.95,h=20)
+plot(pred.google, ylab="Google") + grid()
+```
+
+```{r Estimating the orders of the ARIMA(p,d,q) automatically, warning=FALSE}
+arima.apple.1 <- auto.arima(log(apply(array, margin, ...)), ic="aic")
+pred.apple <- forecast(arima.apple.1,level=0.95,h=20)
+plot(pred.apple, ylab="Apple") + grid()
 ```
 
 This model does not satisfy and another possible model should be pursued. GARCH could provide better results.
