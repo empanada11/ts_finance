@@ -234,13 +234,13 @@ arima.apple <- Arima(y=log(apple), order=c(ar,1,ma), include.constant = TRUE)
 coeftest(arima.apple)
 ```
 
-```{r Estimating the orders of the ARIMA(p,d,q) automatically, warning=FALSE}
+```{r Estimating the orders of the ARIMA(p,d,q) automatically, warning=TRUE}
 arima <- auto.arima(log(META), ic="aic")
 pred <- forecast(arima,level=0.95,h=20)
 plot(pred, ylab="META") + grid()
 ```
 
-```{r Estimating the orders of the ARIMA(p,d,q) automatically, warning=FALSE}
+```{r Estimating the orders of the ARIMA(p,d,q) automatically google, warning=FALSE}
 arima.google1 <- auto.arima(log(goog), ic="aic")
 pred.google <- forecast(arima.google1,level=0.95,h=20)
 plot(pred.google, ylab="Google") + grid()
