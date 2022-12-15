@@ -128,7 +128,7 @@ adf.test(goog)
 adf.test(apple)
 ```
 
-It is not stationary therefore we have to do some modelling.
+It is not stationary therefore we have to do some modelling. Müssen wir anschauen
 
 ```{r Calculating log returns for META}
 META_returns <- na.omit(diff(log(META)))
